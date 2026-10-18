@@ -1,17 +1,16 @@
-version: 1.0
+version: 1
+
 jobs:
-  hello:
+  frontend_build:
     steps:
-      - echo "Hello"
-  world:
+      - cd frontend && npm ci && npm run build
+
+  backend_test:
     steps:
-      - echo "World"
-  hello-world:
-    steps:
-      - echo "Hello World!"
+      - cd backend && npm ci && npm test --if-present
+
 stages:
-  - name: build
+  - name: Build_and_Test
     jobs:
-      - - hello
-        - world
-      - hello-world
+      - frontend_build
+      - backend_test
