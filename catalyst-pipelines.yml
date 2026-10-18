@@ -1,16 +1,63 @@
 version: 1
 
 jobs:
+  validate_project:
+    steps:
+      - node --version
+      - npm --version
+      - test -f catalyst.json
+      - test -f frontend/package.json
+      - test -f backend/package.json
+      - test -f frontend/package-lock.json
+      - test -f backend/package-lock.json
+
   frontend_build:
     steps:
-      - cd frontend && npm ci && npm run build
+      - cd frontend && npm ci
+      - cd frontend && npm run build
+      - test -d frontend/dist
+
+  frontend_test:
+    steps:
+      - cd frontend && npm test --if-present
+
+  backend_build:
+    steps:
+      - cd backend && npm ci
+      - cd backend && npm run build --if-present
+      - node --check backend/src/app.js
+      - node --check backend/src/server.js
 
   backend_test:
     steps:
-      - cd backend && npm ci && npm test --if-present
+      - cd backend && npm test --if-present
+
+  package_application:
+    steps:
+      - test -d frontend/dist
+      - test -f backend/package.json
+      - echo "Frontend and backend validation completed"
 
 stages:
+  - name: Validate
+    jobs:
+      - validate_project
+
   - name: Build_and_Test
     jobs:
       - frontend_build
+      - frontend_test
+      - backend_build
       - backend_test
+    when:
+      equal:
+        - << status.Validate >>
+        - success
+
+  - name: Package
+    jobs:
+      - package_application
+    when:
+      equal:
+        - << status.Build_and_Test >>
+        - success
