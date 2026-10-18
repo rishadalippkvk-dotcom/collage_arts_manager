@@ -55,3 +55,4 @@ stages:
 runners:
   run1:
     config-id: 2
+pipeline-runner: run1
